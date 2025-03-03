@@ -1,5 +1,8 @@
 import numpy as np
 
+
+
+# ajouter un cas pour traier laction =-1 ( pour le cas ou  l'agent n'est plsu en jeu)
 def compute_reward(num_agents, old_positions, agent_positions, evacuated_agents, deactivated_agents, goal_area):
     rewards = np.zeros(num_agents)
 
