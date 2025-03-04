@@ -86,6 +86,7 @@ def train(config_path: str) -> MyAgent:
 
     # Metrics to follow the performance
     all_rewards = []
+    all_results = []
     total_reward = 0
     episode_count = 0
     
@@ -118,12 +119,23 @@ def train(config_path: str) -> MyAgent:
             if terminated or truncated:
                 # print("\r")
                 episode_count += 1
-                print("episode count : ",episode_count)
+                # print("episode count : ",episode_count)
+                # Display of the step information
+                print(f"\rEpisode {episode_count + 1}, Step {info['current_step']}, "
+                    f"Reward: {total_reward:.2f}, "
+                    f"Evacuated: {len(info['evacuated_agents'])}, "
+                    f"Deactivated: {len(info['deactivated_agents'])}", end='')
+                
                 all_rewards.append(total_reward)
                 total_reward = 0
                 
                 if episode_count < max_episodes:
                     state, info = env.reset()
+                    res = []
+                    for e in state : 
+                        res.append(e[3])
+                    all_results.append(res)
+                    # print(state)
 
     except KeyboardInterrupt:
         print("\nSimulation interrupted by the user")
@@ -131,7 +143,7 @@ def train(config_path: str) -> MyAgent:
     finally:
         env.close()
 
-    return agent, all_rewards
+    return agent, all_rewards, all_results
 
 
 def evaluate(configs_paths: list, trained_agent: MyAgent, num_episodes: int = 10) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -181,8 +193,8 @@ def evaluate(configs_paths: list, trained_agent: MyAgent, num_episodes: int = 10
                     f"Evacuated: {len(info['evacuated_agents'])}, "
                     f"Deactivated: {len(info['deactivated_agents'])}", end='')
             
-                # Pause
-                time.sleep(1)
+                # # Pause
+                # time.sleep(1)
 
                 # If the episode is terminated
                 if terminated or truncated:
