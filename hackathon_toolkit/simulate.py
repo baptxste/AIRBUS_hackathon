@@ -124,7 +124,7 @@ def train(config_path: str) -> MyAgent:
                 print(f"\rEpisode {episode_count + 1}, Step {info['current_step']}, "
                     f"Reward: {total_reward:.2f}, "
                     f"Evacuated: {len(info['evacuated_agents'])}, "
-                    f"Deactivated: {len(info['deactivated_agents'])}", end='')
+                    f"Deactivated: {len(info['deactivated_agents'])}\n", end='')
                 
                 all_rewards.append(total_reward)
                 total_reward = 0

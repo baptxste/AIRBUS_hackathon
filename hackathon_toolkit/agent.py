@@ -30,8 +30,26 @@ class MyAgent():
         self.lastState = []
         for state in list_state : 
             if state[3]==0: # état du drone
-                state = np.concatenate((state[:3], state[4:]))
-                state = np.array2string(state)
+                main_state = np.concatenate((state[:3], state[6:12]))
+                goal = (state[4], state[5])
+                main_state[0] = main_state[0] - goal[0]
+                main_state[1] = main_state[1] - goal[1]
+                other_state = state[12:]
+                # print( len(state))
+                # print( len(main_state))
+                # print(len(other_state))
+                num_drone = int(len(other_state)/10)
+                avg_position = [(state[0], state[1])]
+
+                for i in range(num_drone): # on récupère la postion de chaque drone pour calculer la position moyenne de l'essaim 
+                    if other_state[10*i+3] == 0 :
+                        avg_position.append(( other_state[10*i+0],  other_state[10*i+1]))
+                mean_position = np.round(np.mean(avg_position, axis=0)).astype(int) - goal
+                # l'état final contient la position du drone, du goal et les infos lidar et la position moyenne de l'essaim
+                final_state = np.concatenate((main_state, mean_position))
+
+                state = np.array2string(final_state)
+
                 self.lastState.append(state)
                 self.lastAction.append(self.ai.choose_action(state))
             # else : 
