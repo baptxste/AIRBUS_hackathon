@@ -7,10 +7,10 @@ import time
 from typing import Tuple, Optional, Dict
 
 from env import MazeEnv
-from agent import MyAgent
+from agent import MyAgents
 
 
-def simulation_config(config_path: str, new_agent: bool = True) -> Tuple[MazeEnv, Optional[MyAgent], Dict]:
+def simulation_config(config_path: str, new_agent: bool = True) -> Tuple[MazeEnv, Optional[MyAgents], Dict]:
     """
     Configure the environment and optionally an agent using a JSON configuration file.
 
@@ -41,7 +41,7 @@ def simulation_config(config_path: str, new_agent: bool = True) -> Tuple[MazeEnv
     )
 
     # Agent configuration
-    agent = MyAgent(num_agents=config.get('num_agents')) if new_agent else None
+    agent = MyAgents(num_agents=config.get('num_agents')) if new_agent else None
 
     return env, agent, config
 
@@ -69,7 +69,7 @@ def plot_cumulated_rewards(rewards: list, interval: int = 100):
     plt.show()
 
 
-def train(config_path: str) -> MyAgent:
+def train(config_path: str) -> MyAgents:
     """
     Train an agent on the configured environment.
 
@@ -95,15 +95,16 @@ def train(config_path: str) -> MyAgent:
 
     try:
         while episode_count < max_episodes:
+            
             # Determine agents actions
-            actions = agent.get_action(state)
+            actions = agent.get_action(state, env.action_space)
 
             # Execution of a simulation step
             state, rewards, terminated, truncated, info = env.step(actions)
             total_reward += np.sum(rewards)
 
             # Update agent policy
-            agent.update_policy(actions, state, rewards)
+            agent.update_policy(actions, state, rewards, env)
 
             # Display of the step information
             print(f"\rEpisode {episode_count + 1}, Step {info['current_step']}, "
@@ -133,7 +134,7 @@ def train(config_path: str) -> MyAgent:
     return agent, all_rewards
 
 
-def evaluate(configs_paths: list, trained_agent: MyAgent, num_episodes: int = 10) -> tuple[pd.DataFrame, pd.DataFrame]:
+def evaluate(configs_paths: list, trained_agent: MyAgents, num_episodes: int = 10) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Evaluate a trained agent on multiple configurations, calculate metrics, and visualize results.
 
