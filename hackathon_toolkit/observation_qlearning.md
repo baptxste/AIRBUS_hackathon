@@ -9,3 +9,6 @@ l'état renvoyé comporte aussi beaucoup d'information redondante et la taille d
 
 
 on constate que entre deux épisodes distincts la postion des murs et des objectifs bougent, utiliser des informations liées à la position n'est surement donc pas très efficace, nous essayons de définir une position relative ou l'objectif du drone est l'origine, 
+
+
+On remarque aussi que le drone n'a pas de lidar sur la marche arrière, il donc mieux qu'il fasse demi tour puis qu'il avance afin d'éviter de faire des colision, cela demande plus de temps mais au moins ya moins de risque de crash 

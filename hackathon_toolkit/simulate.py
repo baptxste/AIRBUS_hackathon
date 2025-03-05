@@ -92,16 +92,25 @@ def train(config_path: str) -> MyAgent:
     
     # Initial reset of the environment
     state, info = env.reset()
-    time.sleep(1)
-
+    # time.sleep(1)
+    n_steps = 0
     try:
         while episode_count < max_episodes:
             # Determine agents actions
             actions = agent.get_action(state)
 
+            # print(actions)
+            # print(type(actions))
+            # actions = [int(input("action"))]
+            # print(actions)
+
+            n_steps +=1
+            # print("STATE1 : ", state)
+            # print("ACTION :", actions)
             # Execution of a simulation step
             state, rewards, terminated, truncated, info = env.step(actions)
             total_reward += np.sum(rewards)
+            # print("STATE2 : ", state)
 
             # Update agent policy
             agent.update_policy(actions, state, rewards)
@@ -126,21 +135,18 @@ def train(config_path: str) -> MyAgent:
                     f"Evacuated: {len(info['evacuated_agents'])}, "
                     f"Deactivated: {len(info['deactivated_agents'])}\n", end='')
                 
+                all_results.append((len(info['evacuated_agents']),len(info['deactivated_agents'])))
                 all_rewards.append(total_reward)
                 total_reward = 0
                 
                 if episode_count < max_episodes:
                     state, info = env.reset()
-                    res = []
-                    for e in state : 
-                        res.append(e[3])
-                    all_results.append(res)
-                    # print(state)
-
     except KeyboardInterrupt:
         print("\nSimulation interrupted by the user")
     
     finally:
+        print("N_step total = ", n_steps)
+        agent.save()
         env.close()
 
     return agent, all_rewards, all_results
