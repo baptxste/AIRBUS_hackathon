@@ -25,6 +25,8 @@ class MazeEnv(gym.Env):
         self.window_size = 512
         self.cell_size = self.window_size // self.grid_size
         self.render_mode = render_mode
+        if self.render_mode != "human":
+            self.window = None
         self.screen_size = self.window_size
         self.corners = [(0, 0), (0, self.grid_size-1), 
                        (self.grid_size-1, 0), (self.grid_size-1, self.grid_size-1)]   # Define grid's corners
@@ -336,12 +338,21 @@ class MazeEnv(gym.Env):
         return state, info
 
 
+
     def get_reward(self, old_positions: list):
-        rewards, evacuated_agents = compute_reward(self.num_agents, old_positions,
-                                                   self.agent_positions, self.evacuated_agents, 
-                                                   self.deactivated_agents, self.goal_area)
-        if evacuated_agents != self.evacuated_agents:
-            self.evacuated_agents = evacuated_agents    
+        rewards, evacuated_agents = compute_reward(
+            self.num_agents, old_positions,
+            self.agent_positions, self.evacuated_agents, 
+            self.deactivated_agents, self.goal_area,
+            self.current_step,             
+            self.max_episode_steps          
+        )
+
+        new_evacuated = evacuated_agents - self.evacuated_agents
+        for agent_id in new_evacuated:
+            print(f"Agent {agent_id} a atteint son goal à la position {self.agent_positions[agent_id]} au step {self.current_step}.")
+
+        self.evacuated_agents = evacuated_agents    
 
         return rewards
 
@@ -592,6 +603,8 @@ class MazeEnv(gym.Env):
 
 
     def _render_frame(self):
+        if self.window is None:
+            return
         try:
             self.window.fill(self.colors['empty'])
             
