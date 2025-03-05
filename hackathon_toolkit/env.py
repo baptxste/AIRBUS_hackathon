@@ -7,6 +7,10 @@ from collections import deque
 from typing import Tuple, List, Set, Optional, Union, Dict
 from reward import compute_reward
 
+def manhattan_distance(pos1, pos2):
+        """Calculate Manhattan distance between two positions"""
+        return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
+
 class MazeEnv(gym.Env):
 
     metadata = {
@@ -288,6 +292,7 @@ class MazeEnv(gym.Env):
                     added_agents_count += 1
 
         return state
+
 
     def reset(self, seed: Optional[int] = None, options: Optional[Dict] = None) -> Tuple[np.ndarray, Dict]:
         """Environment reset with a new optional seed."""
