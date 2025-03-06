@@ -160,13 +160,62 @@
 import numpy as np
 import os
 from custom_env import CustomEnv
-from stable_baselines3 import PPO
+from stable_baselines3 import PPO, DQN
 import supersuit as ss
 from stable_baselines3.common.callbacks import BaseCallback
 import matplotlib.pyplot as plt
 from supersuit.multiagent_wrappers.black_death import black_death_par
 from stable_baselines3.common.vec_env import DummyVecEnv
 import json
+import matplotlib.pyplot as plt
+import numpy as np
+
+def plot_results(data):
+    cumulative_rewards = np.zeros(4)  # 4 agents
+    steps = []
+
+    reward1_cumulative = []
+    reward2_cumulative = []
+    reward3_cumulative = []
+    reward4_cumulative = []
+
+    # Parcourir les données pour accumuler les récompenses
+    step = 0
+    for entry in data:
+
+        steps.append(step)
+        step +=1
+        
+        # Ajouter les récompenses individuelles à la récompense cumulée
+        cumulative_rewards += entry['individual_rewards']
+        
+        # Ajouter les récompenses cumulées à leurs listes respectives
+        reward1_cumulative.append(cumulative_rewards[0])
+        reward2_cumulative.append(cumulative_rewards[1])
+        reward3_cumulative.append(cumulative_rewards[2])
+        reward4_cumulative.append(cumulative_rewards[3])
+
+    # Tracer les courbes des récompenses cumulées
+    plt.figure(figsize=(10, 6))
+    plt.plot(steps, reward1_cumulative, label='Agent 1', marker='o')
+    plt.plot(steps, reward2_cumulative, label='Agent 2', marker='o')
+    plt.plot(steps, reward3_cumulative, label='Agent 3', marker='o')
+    plt.plot(steps, reward4_cumulative, label='Agent 4', marker='o')
+
+    # Ajouter des labels et un titre
+    plt.title("Récompenses cumulées des agents au fil des étapes")
+    plt.xlabel("Étapes")
+    plt.ylabel("Récompenses cumulées")
+    plt.legend()
+
+    # Afficher le graphique
+    plt.grid(True)
+    plt.savefig('results.png')
+    plt.show()
+    # plt.close()
+
+
+
 class InfoCollectorCallback(BaseCallback):
     """
     Custom callback to collect and store the 'info' dictionary returned by the environment.
@@ -184,9 +233,12 @@ class InfoCollectorCallback(BaseCallback):
         # if 'infos' in self.locals:
         #     for info in self.locals['infos']:
         #         self.infos.append(info)
-        if 'rewards' in self.locals:
-            for info in self.locals['rewards']:
-                self.infos.append(info)
+        if 'infos' in self.locals:
+            for info in self.locals['infos']:
+                if info!={} :
+                    info['individual_rewards'] = info['individual_rewards'].tolist()
+
+                    self.infos.append(info)
 
         return True
 
@@ -196,8 +248,8 @@ class InfoCollectorCallback(BaseCallback):
         Here we save the collected 'info' dictionaries to a JSON file.
         """
         with open('collected_infos.json', 'w') as f:
-            # json.dump(self.infos, f, indent=4)
-            f.write(str(self.infos))
+            json.dump(self.infos, f, indent=4)
+            # f.write(str(self.infos))
 
     def get_collected_infos(self):
         """
@@ -217,9 +269,18 @@ if __name__ == "__main__":
 
     info_callback = InfoCollectorCallback()
 
-    model = PPO("MlpPolicy", env, verbose=1, tensorboard_log=log_dir)
+    # model = PPO("MlpPolicy", env, verbose=1, tensorboard_log=log_dir)
+    model = DQN("MlpPolicy", env, learning_rate=3e-4, gamma=0.99, batch_size=64, verbose=1, tensorboard_log=log_dir)
 
-    model.learn(total_timesteps=1000, callback=info_callback)
+    model.learn(total_timesteps=10000, callback=info_callback)
 
     model.save("ppo_pettingzoo_model")
     print("Entraînement terminé. Les informations collectées ont été sauvegardées dans 'collected_infos.json'.")
+
+
+
+
+with open("./collected_infos.json",'r') as file : 
+    data = json.load(file)
+
+plot_results(data)

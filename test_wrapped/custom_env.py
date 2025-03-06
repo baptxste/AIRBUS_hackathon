@@ -163,11 +163,12 @@ class CustomEnv(ParallelEnv):
         
         if env_infos["current_step"] >= env_infos["max_episode_steps"]:
             truncations = {a: True for a in self.agents}
+            self.reset()
         
         done = {a: done.get(a, False) for a in self.agents}
         truncations = {a: truncations.get(a, False) for a in self.agents}
         
-        infos = {a: {} for a in self.possible_agents}
+        infos = {"agent_0":env_infos} #{a: env_infos for a in self.possible_agents}
         
         
         self.agents = [a for a in self.agents if not done[a]]
