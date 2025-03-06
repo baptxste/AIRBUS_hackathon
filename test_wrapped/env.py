@@ -166,9 +166,9 @@ class MazeEnv(gym.Env):
             attempts += 1
   
         # If we didn't achieve the setup of all obstacles, reduce the number of obstacles
-        if len(dynamic_obstacles) < self.num_dynamic_obstacles:
-            print(f"Warning: Could only place {len(dynamic_obstacles)} dynamic obstacles "
-                f"instead of {self.num_dynamic_obstacles} due to space constraints")
+        # if len(dynamic_obstacles) < self.num_dynamic_obstacles:
+            # print(f"Warning: Could only place {len(dynamic_obstacles)} dynamic obstacles "
+            #     f"instead of {self.num_dynamic_obstacles} due to space constraints")
         
         return dynamic_obstacles
 

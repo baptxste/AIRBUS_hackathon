@@ -6,6 +6,7 @@ def manhattan_distance(pos1, pos2):
 
 #ajouter un cas pour traier laction =-1 ( pour le cas ou  l'agent n'est plsu en jeu)
 def compute_reward(num_agents, old_positions, agent_positions, evacuated_agents, deactivated_agents, goal_area):
+    print("REWARD ",num_agents, old_positions, agent_positions, evacuated_agents, deactivated_agents, goal_area)
     rewards = np.zeros(num_agents)
     # print( "OLD : ", old_positions)
     # print("NEW : ",agent_positions)
@@ -71,21 +72,21 @@ def compute_reward(num_agents, old_positions, agent_positions, evacuated_agents,
 #             else : rewards[i] = -0.1
 #     return rewards, evacuated_agents
 
-def compute_reward(num_agents, old_positions, new_positions, evacuated_agents, deactivated_agents, goal_area):
-    rewards = [0] * num_agents
+# def compute_reward(num_agents, old_positions, new_positions, evacuated_agents, deactivated_agents, goal_area):
+#     rewards = [0] * num_agents
 
-    for i in range(num_agents):
-        # Check if the agent has reached the goal
-        if tuple(new_positions[i]) in goal_area:
-            rewards[i] += 1000  # High reward for reaching the goal
-            evacuated_agents.add(i)
+#     for i in range(num_agents):
+#         # Check if the agent has reached the goal
+#         if tuple(new_positions[i]) in goal_area:
+#             rewards[i] += 1000  # High reward for reaching the goal
+#             evacuated_agents.add(i)
 
-        # Check if the agent has collided
-        if i in deactivated_agents:
-            rewards[i] -= 100  # Penalty for collision
+#         # Check if the agent has collided
+#         if i in deactivated_agents:
+#             rewards[i] -= 100  # Penalty for collision
 
-        # Small penalty for each step to encourage faster completion
-        if i not in evacuated_agents and i not in deactivated_agents:
-            rewards[i] -= 0.1
+#         # Small penalty for each step to encourage faster completion
+#         if i not in evacuated_agents and i not in deactivated_agents:
+#             rewards[i] -= 0.1
 
-    return rewards, evacuated_agents
+#     return rewards, evacuated_agents

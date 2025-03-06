@@ -141,13 +141,15 @@ class CustomEnv(ParallelEnv):
         self.agents = copy(self.possible_agents)
     
     def reset(self, seed=None, options=None):
+        # print("ATTENTION RESET")
         self.agents = copy(self.possible_agents)
         observations = self.env.reset()[0].astype(np.int64).tolist()
         infos = {a: {} for a in self.possible_agents}
-        return {agent: obs for agent, obs in zip(self.possible_agents, observations)}, infos
+        return {agent: obs for agent, obs in zip(self.agents, observations)}, infos
     
     def step(self, actions):
         action_list = [actions[agent] for agent in self.agents]
+        self.last_action = action_list
         observations, rewards, dones, truncated, env_infos = self.env.step(action_list)
         
         observations = {a: observations[i].astype(np.int64).tolist() for i, a in enumerate(self.agents)}
@@ -161,14 +163,15 @@ class CustomEnv(ParallelEnv):
         for idx in env_infos["evacuated_agents"]:
             done[f"agent_{idx}"] = True
         
-        if env_infos["current_step"] >= env_infos["max_episode_steps"]:
+        if env_infos["current_step"] >= self.env.max_episode_steps:
             truncations = {a: True for a in self.agents}
+            # print("OK")
             self.reset()
         
         done = {a: done.get(a, False) for a in self.agents}
         truncations = {a: truncations.get(a, False) for a in self.agents}
         
-        infos = {"agent_0":env_infos} #{a: env_infos for a in self.possible_agents}
+        infos = {"agent_0":env_infos } #{a: env_infos for a in self.possible_agents}
         
         
         self.agents = [a for a in self.agents if not done[a]]

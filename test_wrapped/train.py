@@ -1,166 +1,7 @@
-# from custom_env import CustomEnv
-# from stable_baselines3 import PPO
-# import supersuit as ss
-# from pettingzoo.test import parallel_api_test
-
-# from supersuit.multiagent_wrappers.black_death import black_death_par
-
-
-# if __name__ == "__main__":
-#     env = CustomEnv("config.json")
-#     # parallel_api_test(env, num_cycles=1_000)
-
-
-#     env = black_death_par(env)
-#     # env = ss.pad_observations_v0(env)
-
-#     # Application des prétraitements nécessaires
-#     env = ss.pettingzoo_env_to_vec_env_v1(env)
-#     env = ss.concat_vec_envs_v1(env, 1, base_class="stable_baselines3")
-#     model = PPO("MlpPolicy", env, verbose=1)
-
-#     # Entraînement de l'agent
-#     model.learn(total_timesteps=1000000)
-
-#     # Sauvegarde du modèle entraîné
-#     model.save("ppo_pettingzoo_model")
-
-
-
-
-
-
-
-
-# import numpy as np
-# import os
-# from custom_env import CustomEnv
-# from stable_baselines3 import PPO
-# import supersuit as ss
-# from stable_baselines3.common.callbacks import BaseCallback
-# import matplotlib.pyplot as plt
-# from supersuit.multiagent_wrappers.black_death import black_death_par
-# from stable_baselines3.common.vec_env import DummyVecEnv
-
-
-# # # Callback personnalisé pour enregistrer les métriques dans TensorBoard
-# # class CustomTensorboardCallback(BaseCallback):
-# #     """
-# #     Custom callback for plotting additional values (like cumulative rewards) in TensorBoard.
-# #     """
-
-# #     def __init__(self, verbose=0):
-# #         super().__init__(verbose)
-# #         self.cumulative_rewards = []
-# #         self.episode_rewards = []  # Liste des récompenses cumulées par épisode
-
-# #     def _on_step(self) -> bool:
-# #         """
-# #         This method is called every time the model steps.
-# #         Here we log cumulative rewards per episode.
-# #         """
-# #         # Récupérer la récompense cumulée pour chaque agent à partir de l'environnement
-# #         if 'infos' in self.locals:
-# #             for info in self.locals['infos']:
-# #                 if 'episode' in info:
-# #                     # Accumuler la récompense par épisode
-# #                     self.episode_rewards.append(info['episode']['r'])
-# #                     # Log de la récompense cumulée dans TensorBoard
-# #                     self.logger.record("episode_reward", info['episode']['r'])
-
-# #         return True
-
-# #     def _on_training_end(self):
-# #         """
-# #         This method is called when training ends, allowing you to plot the cumulative rewards.
-# #         """
-# #         # Calculer et enregistrer la récompense cumulée totale
-# #         total_reward = np.sum(self.episode_rewards)
-# #         self.logger.record("total_reward", total_reward)
-# #         # Affichage de la courbe des récompenses cumulées à la fin de l'entraînement
-# #         plt.plot(self.episode_rewards)
-# #         plt.xlabel('Episodes')
-# #         plt.ylabel('Cumulative Reward')
-# #         plt.title('Learning Curve')
-# #         plt.savefig('learning_curve.png')
-# #         plt.close()
-
-
-# class CustomTensorboardCallback(BaseCallback):
-#     """
-#     Custom callback for plotting additional values (like cumulative rewards) in TensorBoard.
-#     """
-
-#     def __init__(self, verbose=0):
-#         super().__init__(verbose)
-#         self.episode_rewards = []
-
-#     def _on_step(self) -> bool:
-#         """
-#         This method is called every time the model steps.
-#         Here we log cumulative rewards per episode.
-#         """
-#         if 'infos' in self.locals:
-#             for info in self.locals['infos']:
-#                 if 'episode' in info:
-#                     self.episode_rewards.append(info['episode']['r'])
-#                     self.logger.record("episode_reward", info['episode']['r'])
-#                     self.logger.record("mean_episode_reward", np.mean(self.episode_rewards))
-#                     self.logger.record("reward_variance", np.var(self.episode_rewards))
-
-#         return True
-
-#     def _on_training_end(self):
-#         """
-#         This method is called when training ends, allowing you to plot the cumulative rewards.
-#         """
-#         total_reward = np.sum(self.episode_rewards)
-#         self.logger.record("total_reward", total_reward)
-
-#         plt.plot(self.episode_rewards)
-#         plt.xlabel('Episodes')
-#         plt.ylabel('Cumulative Reward')
-#         plt.title('Learning Curve')
-#         plt.savefig('learning_curve.png')
-#         plt.close()
-
-
-# if __name__ == "__main__":
-#     # Charger l'environnement personnalisé
-#     env = CustomEnv("config.json")
-
-#     # Appliquer les prétraitements
-#     env = black_death_par(env)
-#     env = ss.pettingzoo_env_to_vec_env_v1(env)
-#     env = ss.concat_vec_envs_v1(env,num_vec_envs = 1, num_cpus=20, base_class="stable_baselines3")
-
-
-#     # Créer un dossier pour les logs
-#     log_dir = "./logs"
-#     os.makedirs(log_dir, exist_ok=True)
-
-#     # Créer un callback personnalisé pour enregistrer les métriques
-#     custom_callback = CustomTensorboardCallback()
-
-#     # Créer et entraîner le modèle PPO
-#     model = PPO("MlpPolicy", env, verbose=1, tensorboard_log=log_dir)
-
-#     model.learn(total_timesteps=1000000, callback=custom_callback)
-
-#     model.save("ppo_pettingzoo_model")
-#     print("Entraînement terminé. Les métriques sont disponibles dans TensorBoard.")
-
-
-
-
-
-
-
-
 import numpy as np
 import os
 from custom_env import CustomEnv
-from stable_baselines3 import PPO, DQN
+from stable_baselines3 import PPO, DQN, SAC, A2C
 import supersuit as ss
 from stable_baselines3.common.callbacks import BaseCallback
 import matplotlib.pyplot as plt
@@ -169,8 +10,10 @@ from stable_baselines3.common.vec_env import DummyVecEnv
 import json
 import matplotlib.pyplot as plt
 import numpy as np
+from collections import Counter
 
 config_path ="config.json"
+
 def plot_results(data):
 
     with open(config_path, 'r') as config_file:
@@ -190,7 +33,7 @@ def plot_results(data):
 
     plt.figure(figsize=(10, 6))
     for i in range(num_agent):
-        plt.plot(steps,cumulative[i], label=f'Agent {i}', marker='o')
+        plt.plot(steps,cumulative[i], label=f'Agent {i}')
 
     plt.title("Récompenses cumulées des agents au fil des étapes")
     plt.xlabel("Étapes")
@@ -201,6 +44,24 @@ def plot_results(data):
     plt.show()
     # plt.close()
 
+def process_file_and_plot_histogram(data):
+
+    counter = Counter(data)
+    
+    numbers = list(counter.keys())
+    frequencies = list(counter.values())
+
+
+    plt.figure(figsize=(10, 5))
+    plt.bar(numbers, frequencies, color='blue', alpha=0.7)
+    plt.xlabel('Nombre')
+    plt.ylabel('Fréquence')
+    plt.title('Fréquence des nombres dans les listes')
+    plt.xticks(numbers)  
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.savefig('movements_freq.png')
+
+    plt.show()
 
 
 class InfoCollectorCallback(BaseCallback):
@@ -211,6 +72,7 @@ class InfoCollectorCallback(BaseCallback):
     def __init__(self, verbose=0):
         super().__init__(verbose)
         self.infos = []
+        self.actions  = []
 
     def _on_step(self) -> bool:
         """
@@ -220,6 +82,7 @@ class InfoCollectorCallback(BaseCallback):
         # if 'infos' in self.locals:
         #     for info in self.locals['infos']:
         #         self.infos.append(info)
+       
         if 'infos' in self.locals:
             for info in self.locals['infos']:
                 try : 
@@ -231,6 +94,14 @@ class InfoCollectorCallback(BaseCallback):
                     # print(info.keys())
                     pass
 
+        if 'actions' in self.locals : 
+            try : 
+                self.actions.append(self.locals['actions'])
+            except : 
+                pass
+
+
+
         return True
 
     def _on_training_end(self) -> None:
@@ -239,8 +110,16 @@ class InfoCollectorCallback(BaseCallback):
         Here we save the collected 'info' dictionaries to a JSON file.
         """
         with open('collected_infos.json', 'w') as f:
-            json.dump(self.infos, f, indent=4)
-            # f.write(str(self.infos))
+            f.write('[\n')
+            for i, d in enumerate(self.infos):
+                json.dump(d, f)
+                if i < len(self.infos) - 1:  # Vérifie si ce n'est pas le dernier élément
+                    f.write(',\n')
+            f.write('\n]')
+
+        with open('all_actions.json', 'w') as f:
+            for e in self.actions: 
+                f.write(str(e.tolist())+'\n')
 
     def get_collected_infos(self):
         """
@@ -261,9 +140,53 @@ if __name__ == "__main__":
     info_callback = InfoCollectorCallback()
 
     # model = PPO("MlpPolicy", env, verbose=1, tensorboard_log=log_dir)
-    model = DQN("MlpPolicy", env, learning_rate=3e-4, gamma=0.99, batch_size=64, verbose=1, tensorboard_log=log_dir)
+    # model = DQN("MlpPolicy", env, learning_rate=3e-4, gamma=0.99, batch_size=64, verbose=1, tensorboard_log=log_dir)
+    # model = DQN("MlpPolicy", env,
+    #         learning_rate=1e-3,
+    #         gamma=0.98, 
+    #         batch_size=128,
+    #         buffer_size=100000,  # Taille du buffer mémoire replay
+    #         exploration_fraction=0.1,  # Durée de l'exploration epsilon-greedy
+    #         exploration_final_eps=0.02,  # Valeur finale d'epsilon
+    #         target_update_interval=1000,  # Fréquence de mise à jour du réseau cible
+    #         verbose=1, 
+    #         tensorboard_log=log_dir)
 
-    model.learn(total_timesteps=100000, callback=info_callback)
+    # model = DQN("MlpPolicy", env,
+
+    #         learning_rate=1e-3,
+    #         gamma=0.98, 
+    #         batch_size=128,
+    #         buffer_size=100000,  # Taille du buffer mémoire replay
+    #         exploration_fraction=0.1,  # Durée de l'exploration epsilon-greedy
+    #         exploration_final_eps=0.02,  # Valeur finale d'epsilon
+    #         target_update_interval=1000,  # Fréquence de mise à jour du réseau cible
+    #         verbose=1, 
+    #         tensorboard_log=log_dir)
+
+    model = A2C("MlpPolicy", env, 
+            learning_rate=7e-4,
+            gamma=0.90,
+            n_steps=1,  # Nombre de steps avant une mise à jour
+            ent_coef=0.01,
+            vf_coef=0.5,  # Pondération de la loss sur la valeur
+            max_grad_norm=0.5,  # Clip du gradient pour éviter explosion des gradients
+            verbose=1, 
+            tensorboard_log=log_dir)
+
+    # model = SAC("MlpPolicy", env,
+    #         learning_rate=3e-4,
+    #         gamma=0.99,
+    #         batch_size=256, 
+    #         buffer_size=500000,  
+    #         tau=0.005,  # Taux de mise à jour du réseau cible
+    #         ent_coef='auto',  # Coefficient d'entropie, auto-ajusté
+    #         verbose=1, 
+    #         tensorboard_log=log_dir)
+    
+    
+
+    model.learn(total_timesteps=10000, callback=info_callback)
 
     model.save("ppo_pettingzoo_model")
     print("Entraînement terminé. Les informations collectées ont été sauvegardées dans 'collected_infos.json'.")
@@ -275,3 +198,11 @@ with open("./collected_infos.json",'r') as file :
     data = json.load(file)
 
 plot_results(data)
+
+data = []
+with open("./all_actions.json", 'r') as f:
+    for line in f:
+        numbers = list(line.strip().replace('[','').replace(']','').replace(' ','').split(','))  # Convertir en entiers
+        data.extend(numbers)  # Ajouter tous les nombres à une seule liste
+
+process_file_and_plot_histogram(data)

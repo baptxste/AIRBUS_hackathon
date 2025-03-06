@@ -152,87 +152,87 @@ def train(config_path: str) -> MyAgent:
     return agent, all_rewards, all_results
 
 
-def evaluate(configs_paths: list, trained_agent: MyAgent, num_episodes: int = 10) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Evaluate a trained agent on multiple configurations, calculate metrics, and visualize results.
+# def evaluate(configs_paths: list, trained_agent: MyAgent, num_episodes: int = 10) -> tuple[pd.DataFrame, pd.DataFrame]:
+#     """
+#     Evaluate a trained agent on multiple configurations, calculate metrics, and visualize results.
 
-    Args:
-        config_path (list): List of paths to the configuration JSON files.
-        trained_agent (MyAgent): A pre-trained agent to evaluate.
-        num_episodes (int): Number of episodes to run for evaluation per configuration. Defaults to 10.
+#     Args:
+#         config_path (list): List of paths to the configuration JSON files.
+#         trained_agent (MyAgent): A pre-trained agent to evaluate.
+#         num_episodes (int): Number of episodes to run for evaluation per configuration. Defaults to 10.
 
-    Returns:
-        pd.DataFrame: A DataFrame containing evaluation metrics for each episode and configuration.
-    """
+#     Returns:
+#         pd.DataFrame: A DataFrame containing evaluation metrics for each episode and configuration.
+#     """
 
-    # Evaluation results
-    all_results = pd.DataFrame()
+#     # Evaluation results
+#     all_results = pd.DataFrame()
 
-    for config_path in configs_paths:
-        print(f"\n--- Evaluating Configuration: {config_path} ---")
+#     for config_path in configs_paths:
+#         print(f"\n--- Evaluating Configuration: {config_path} ---")
 
-        # Environment configuration
-        env, _, config = simulation_config(config_path, new_agent=False)
+#         # Environment configuration
+#         env, _, config = simulation_config(config_path, new_agent=False)
 
-        # Metrics to follow the performance
-        metrics = []
-        total_reward = 0
-        episode_count = 0
+#         # Metrics to follow the performance
+#         metrics = []
+#         total_reward = 0
+#         episode_count = 0
         
-        # Initial reset of the environment
-        state, info = env.reset()
-        time.sleep(1) 
+#         # Initial reset of the environment
+#         state, info = env.reset()
+#         time.sleep(1) 
    
-        # Run evaluation for the specified number of episodes
-        try:
-            while episode_count < num_episodes:
-                # Determine agents actions
-                actions = trained_agent.get_action(state, evaluation=True)
+#         # Run evaluation for the specified number of episodes
+#         try:
+#             while episode_count < num_episodes:
+#                 # Determine agents actions
+#                 actions = trained_agent.get_action(state, evaluation=True)
 
-                # Execution of a simulation step
-                state, rewards, terminated, truncated, info = env.step(actions)
-                total_reward += np.sum(rewards)
+#                 # Execution of a simulation step
+#                 state, rewards, terminated, truncated, info = env.step(actions)
+#                 total_reward += np.sum(rewards)
 
-                # Display of the step information
-                print(f"\rEpisode {episode_count + 1}/{num_episodes}, Step {info['current_step']}, "
-                    f"Reward: {total_reward:.2f}, "
-                    f"Evacuated: {len(info['evacuated_agents'])}, "
-                    f"Deactivated: {len(info['deactivated_agents'])}", end='')
+#                 # Display of the step information
+#                 print(f"\rEpisode {episode_count + 1}/{num_episodes}, Step {info['current_step']}, "
+#                     f"Reward: {total_reward:.2f}, "
+#                     f"Evacuated: {len(info['evacuated_agents'])}, "
+#                     f"Deactivated: {len(info['deactivated_agents'])}", end='')
             
-                # # Pause
-                # time.sleep(1)
+#                 # # Pause
+#                 # time.sleep(1)
 
-                # If the episode is terminated
-                if terminated or truncated:
-                    print("\r")
-                    # Save metrics
-                    metrics.append({
-                        "config_path": config_path,
-                        "episode": episode_count + 1,
-                        "steps": info['current_step'],
-                        "reward": total_reward,
-                        "evacuated": len(info['evacuated_agents']),
-                        "deactivated": len(info['deactivated_agents'])
-                    })
+#                 # If the episode is terminated
+#                 if terminated or truncated:
+#                     print("\r")
+#                     # Save metrics
+#                     metrics.append({
+#                         "config_path": config_path,
+#                         "episode": episode_count + 1,
+#                         "steps": info['current_step'],
+#                         "reward": total_reward,
+#                         "evacuated": len(info['evacuated_agents']),
+#                         "deactivated": len(info['deactivated_agents'])
+#                     })
 
-                    episode_count += 1
-                    total_reward = 0
+#                     episode_count += 1
+#                     total_reward = 0
 
-                    if episode_count < num_episodes:
-                        state, info = env.reset()
+#                     if episode_count < num_episodes:
+#                         state, info = env.reset()
         
-        except KeyboardInterrupt:
-            print("\nSimulation interrupted by the user")
+#         except KeyboardInterrupt:
+#             print("\nSimulation interrupted by the user")
         
-        finally:
-            env.close()
+#         finally:
+#             env.close()
 
-        # Convert the current configuration's metrics to a DataFrame
-        config_results = pd.DataFrame(metrics)
-        all_results = pd.concat([all_results, config_results], ignore_index=True)
+#         # Convert the current configuration's metrics to a DataFrame
+#         config_results = pd.DataFrame(metrics)
+#         all_results = pd.concat([all_results, config_results], ignore_index=True)
     
-    env.close()
+#     env.close()
 
-    all_results.to_csv('all_results.csv', index=False)
+#     all_results.to_csv('all_results.csv', index=False)
 
-    return all_results
+#     return all_results
