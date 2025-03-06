@@ -39,7 +39,6 @@ def simulation_config(config_path: str, new_agent: bool = True) -> Tuple[MazeEnv
         render_mode=config.get('render_mode', None),
         seed=config.get('seed', None)                               # Seed for reproducibility
     )
-
     # Agent configuration
     agent = MyAgent(num_agents=config.get('num_agents')) if new_agent else None
 
@@ -98,6 +97,7 @@ def train(config_path: str) -> MyAgent:
         while episode_count < max_episodes:
             # Determine agents actions
             actions = agent.get_action(state)
+            print(state[0][6:8])
 
             # print(actions)
             # print(type(actions))
@@ -146,7 +146,7 @@ def train(config_path: str) -> MyAgent:
     
     finally:
         print("N_step total = ", n_steps)
-        agent.save()
+        # agent.save()
         env.close()
 
     return agent, all_rewards, all_results
