@@ -170,45 +170,32 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 
+config_path ="config.json"
 def plot_results(data):
-    cumulative_rewards = np.zeros(4)  # 4 agents
+
+    with open(config_path, 'r') as config_file:
+        config = json.load(config_file)
+
+    num_agent = config.get('num_agents')
+    cumulative_rewards = np.zeros(num_agent) 
     steps = []
+    cumulative = [ [] for _ in range(num_agent)]
 
-    reward1_cumulative = []
-    reward2_cumulative = []
-    reward3_cumulative = []
-    reward4_cumulative = []
-
-    # Parcourir les données pour accumuler les récompenses
-    step = 0
     for entry in data:
-
-        steps.append(step)
-        step +=1
-        
-        # Ajouter les récompenses individuelles à la récompense cumulée
+        steps.append(len(steps))
         cumulative_rewards += entry['individual_rewards']
-        
-        # Ajouter les récompenses cumulées à leurs listes respectives
-        reward1_cumulative.append(cumulative_rewards[0])
-        reward2_cumulative.append(cumulative_rewards[1])
-        reward3_cumulative.append(cumulative_rewards[2])
-        reward4_cumulative.append(cumulative_rewards[3])
 
-    # Tracer les courbes des récompenses cumulées
+        for i in range(num_agent):
+            cumulative[i].append(cumulative_rewards[i])
+
     plt.figure(figsize=(10, 6))
-    plt.plot(steps, reward1_cumulative, label='Agent 1', marker='o')
-    plt.plot(steps, reward2_cumulative, label='Agent 2', marker='o')
-    plt.plot(steps, reward3_cumulative, label='Agent 3', marker='o')
-    plt.plot(steps, reward4_cumulative, label='Agent 4', marker='o')
+    for i in range(num_agent):
+        plt.plot(steps,cumulative[i], label=f'Agent {i}', marker='o')
 
-    # Ajouter des labels et un titre
     plt.title("Récompenses cumulées des agents au fil des étapes")
     plt.xlabel("Étapes")
     plt.ylabel("Récompenses cumulées")
     plt.legend()
-
-    # Afficher le graphique
     plt.grid(True)
     plt.savefig('results.png')
     plt.show()
@@ -235,10 +222,14 @@ class InfoCollectorCallback(BaseCallback):
         #         self.infos.append(info)
         if 'infos' in self.locals:
             for info in self.locals['infos']:
-                if info!={} :
+                try : 
                     info['individual_rewards'] = info['individual_rewards'].tolist()
-
                     self.infos.append(info)
+                    info["terminal_observation"] = info["terminal_observation"].tolist()
+                     
+                except : 
+                    # print(info.keys())
+                    pass
 
         return True
 
@@ -272,7 +263,7 @@ if __name__ == "__main__":
     # model = PPO("MlpPolicy", env, verbose=1, tensorboard_log=log_dir)
     model = DQN("MlpPolicy", env, learning_rate=3e-4, gamma=0.99, batch_size=64, verbose=1, tensorboard_log=log_dir)
 
-    model.learn(total_timesteps=10000, callback=info_callback)
+    model.learn(total_timesteps=100000, callback=info_callback)
 
     model.save("ppo_pettingzoo_model")
     print("Entraînement terminé. Les informations collectées ont été sauvegardées dans 'collected_infos.json'.")
