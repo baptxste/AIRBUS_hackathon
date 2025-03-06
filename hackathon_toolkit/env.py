@@ -176,6 +176,9 @@ class MazeEnv(gym.Env):
             print(f"Warning: Could only place {len(dynamic_obstacles)} dynamic obstacles "
                 f"instead of {self.num_dynamic_obstacles} due to space constraints")
         
+        print(f"Obstacles dynamiques créés : {dynamic_obstacles}")
+
+        
         return dynamic_obstacles
 
 
@@ -195,6 +198,9 @@ class MazeEnv(gym.Env):
             else:
                 new_dynamic_obstacles.append(obstacle)
         self.dynamic_obstacles = new_dynamic_obstacles
+
+        print(f"Obstacles dynamiques après déplacement : {self.dynamic_obstacles}")
+
 
 
     def lidar_scan(self, agent_idx: int, pos: Tuple[int, int]) -> List[int]:
@@ -529,6 +535,7 @@ class MazeEnv(gym.Env):
             elif col_type in ["out_of_bounds", "agent"]:
                 new_positions[idx] = self.agent_positions[idx]
             elif col_type in ["dynamic_obstacle", "wall"]:
+                print(f"Collision détectée pour l'agent {idx} avec {col_type} à la position {proposed_positions[idx]}")
                 new_positions[idx] = np.array([-1, -1])
                 self.deactivated_agents.add(idx)
 
