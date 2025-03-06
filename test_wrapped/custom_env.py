@@ -38,16 +38,12 @@ class CustomEnv(ParallelEnv):
         actions : dict {agent: action}
         Retourne : observations, récompenses, terminaisons, infos (dicts par agent)
         """
-        # Convertir le dict d'actions en liste ordonnée
+
         action_list = [actions[agent] for agent in self.agents]
 
-        # Exécuter l'étape dans l'environnement sous-jacent
+
         observations, rewards, dones, truncated, infos = self.env.step(action_list)
-        print("Step outputs:")
-        print("Observations:", observations, type(observations))
-        print("Rewards:", rewards, type(rewards))
-        print("Dones:", dones, type(dones))
-        print("Infos:", infos, type(infos))
+
 
         observations = {
             a: observations[index].tolist()
@@ -73,13 +69,6 @@ class CustomEnv(ParallelEnv):
 
         return observations, rewards, done, truncations, infos
 
-        # # Convertir les résultats en dictionnaires
-        # return (
-        #     {agent: obs for agent, obs in zip(self.possible_agents, observations)},  
-        #     {agent: reward for agent, reward in zip(self.possible_agents, rewards)},  
-        #     {agent: done for agent, done in zip(self.possible_agents, dones)},  
-        #     {agent: info for agent, info in zip(self.possible_agents, infos)},  
-        # )
 
     def close(self):
         """ Ferme l'environnement sous-jacent. """
@@ -97,4 +86,4 @@ class CustomEnv(ParallelEnv):
     # If your spaces change over time, remove this line (disable caching).
     @functools.lru_cache(maxsize=None)
     def action_space(self, agent):
-        return Discrete(4)
+        return Discrete(7)
