@@ -4,8 +4,14 @@ import json
 from copy import copy
 import functools
 from gymnasium.spaces import Discrete, MultiDiscrete
+import numpy as np
+from gymnasium.spaces import Box
 
 class CustomEnv(ParallelEnv):
+    metadata = {
+        "name": "custom_environment_v0",
+        "is_parallelizable": True  # Indique si l'environnement peut être parallélisé
+    }
     def __init__(self, config_path: str):
         with open(config_path, 'r') as config_file:
             self.config = json.load(config_file)
@@ -23,12 +29,13 @@ class CustomEnv(ParallelEnv):
                 render_mode=self.config.get('render_mode', None),
                 seed=self.config.get('seed', None)                               # Seed for reproducibility
                 )
+        self.render_mode = self.env.render_mode
 
     def reset(self, seed = None, options = None):
         self.agents = copy(self.possible_agents)
         """ Réinitialise l'environnement et retourne un dict d'observations par agent. """
         observations = self.env.reset()  # Doit renvoyer une liste d'états
-        observations  = observations[0].tolist()
+        observations  = observations[0].astype(np.int64).tolist()
         infos = {a: {} for a in self.possible_agents}
         return {agent: obs for agent, obs in zip(self.possible_agents, observations)}, infos
 
@@ -46,22 +53,29 @@ class CustomEnv(ParallelEnv):
 
 
         observations = {
-            a: observations[index].tolist()
+            a: observations[index].astype(np.int64).tolist()
             for index, a in enumerate(self.agents)
         }
         rewards = {
             a:rewards[index]
             for index, a in enumerate(self.agents)
         }
-        done = {a: False for a in self.agents}
-        for e in infos["deactivated_agents"] : 
+
+
+
+        done = {a: False for a in self.agents}  # Initialisez avec False pour chaque agent actif
+        truncations = {a: False for a in self.agents}  # Idem pour truncations
+
+        for e in infos["deactivated_agents"]:
             done[f"agent_{e}"] = True
-        for e in infos["evacuated_agents"] : 
+        for e in infos["evacuated_agents"]:
             done[f"agent_{e}"] = True
-        truncations = {a: False for a in self.agents}
+
+        # Assurez-vous que truncations est mis à jour correctement
         if self.env.current_step > self.env.max_episode_steps:
             truncations = {a: True for a in self.agents}
-        self.env.current_step += 1
+
+
 
         infos = {a: {} for a in self.possible_agents}
 
@@ -80,8 +94,8 @@ class CustomEnv(ParallelEnv):
     @functools.lru_cache(maxsize=None)
     def observation_space(self, agent):
         # gymnasium spaces are defined and documented here: https://gymnasium.farama.org/api/spaces/
-        return MultiDiscrete([7 * 7] * 3)
-
+        # return MultiDiscrete([30] * 22)
+        return Box(low=0, high=30, shape=(22,), dtype=np.int32)
     # Action space should be defined here.
     # If your spaces change over time, remove this line (disable caching).
     @functools.lru_cache(maxsize=None)

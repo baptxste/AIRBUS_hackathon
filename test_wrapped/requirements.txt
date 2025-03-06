@@ -1,0 +1,14 @@
+cloudpickle==3.1.1
+Farama-Notifications==0.0.4
+gym==0.26.0
+gym-notices==0.0.8
+gymnasium==1.1.0
+importlib_metadata==8.5.0
+numpy==1.24.4
+pettingzoo==1.24.3
+pip==24.1
+pygame==2.6.1
+setuptools==58.0.4
+typing_extensions==4.12.2
+wheel==0.45.1
+zipp==3.20.2

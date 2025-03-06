@@ -8,5 +8,5 @@
     "max_lidar_dist_second": 3,
     "max_episodes": 100, 
     "max_episode_steps": 1000, 
-    "render_mode": "human"
+    "render_mode": "none"
 }
