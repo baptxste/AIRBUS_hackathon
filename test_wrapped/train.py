@@ -97,11 +97,7 @@ if __name__ == "__main__":
     # Créer et entraîner le modèle PPO
     model = PPO("MlpPolicy", env, verbose=1, tensorboard_log=log_dir)
 
-    # Entraînement avec le callback personnalisé
-    model.learn(total_timesteps=100000, callback=custom_callback)
+    model.learn(total_timesteps=10000, callback=custom_callback)
 
-    # Sauvegarde du modèle entraîné
     model.save("ppo_pettingzoo_model")
-
-    # Affichage de la courbe d'apprentissage
     print("Entraînement terminé. Les métriques sont disponibles dans TensorBoard.")

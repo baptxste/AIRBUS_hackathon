@@ -30,6 +30,7 @@ class CustomEnv(ParallelEnv):
                 seed=self.config.get('seed', None)                               # Seed for reproducibility
                 )
         self.render_mode = self.env.render_mode
+        self.agents = copy(self.possible_agents)
 
     def reset(self, seed = None, options = None):
         self.agents = copy(self.possible_agents)
@@ -75,6 +76,9 @@ class CustomEnv(ParallelEnv):
         if self.env.current_step > self.env.max_episode_steps:
             truncations = {a: True for a in self.agents}
 
+            # Veillez à ce que la longueur de done et truncations soit cohérente
+        done = {a: done.get(a, False) for a in self.agents}  # Garantit que tous les agents sont pris en compte
+        truncations = {a: truncations.get(a, False) for a in self.agents}  # Idem pour truncations
 
 
         infos = {a: {} for a in self.possible_agents}
@@ -95,7 +99,7 @@ class CustomEnv(ParallelEnv):
     def observation_space(self, agent):
         # gymnasium spaces are defined and documented here: https://gymnasium.farama.org/api/spaces/
         # return MultiDiscrete([30] * 22)
-        return Box(low=0, high=30, shape=(22,), dtype=np.int32)
+        return Box(low=0, high=30, shape=(12 + 10* (self.num_agents -1),), dtype=np.int32)
     # Action space should be defined here.
     # If your spaces change over time, remove this line (disable caching).
     @functools.lru_cache(maxsize=None)
