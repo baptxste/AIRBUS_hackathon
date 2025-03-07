@@ -15,7 +15,7 @@ class DQN(nn.Module):
         x = torch.relu(self.fc1(x))
         x = torch.relu(self.fc2(x))
         x = self.fc3(x)
-        #assume 4*7 in dim output
+        x = nn.Tanh()(x)
         return x
 
 class MixingNetwork(nn.Module):

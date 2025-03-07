@@ -339,7 +339,7 @@ class MazeEnv(gym.Env):
     def get_reward(self, old_positions: list):
         rewards, evacuated_agents = compute_reward(self.num_agents, old_positions,
                                                    self.agent_positions, self.evacuated_agents, 
-                                                   self.deactivated_agents, self.goal_area)
+                                                   self.deactivated_agents, self.goal_area, self.current_step, self.max_episode_steps)
         if evacuated_agents != self.evacuated_agents:
             self.evacuated_agents = evacuated_agents    
 

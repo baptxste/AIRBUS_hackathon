@@ -1,0 +1,11 @@
+config_path,episode,steps,reward,evacuated,deactivated
+config.json,1,8,329.87,2,0
+config.json,2,8,329.87,2,0
+config.json,3,8,329.87,2,0
+config.json,4,7,200.01,1,1
+config.json,5,8,329.87,2,0
+config.json,6,8,329.87,2,0
+config.json,7,7,159.97,1,1
+config.json,8,8,329.87,2,0
+config.json,9,8,329.87,2,0
+config.json,10,8,329.87,2,0
