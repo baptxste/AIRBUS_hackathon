@@ -80,16 +80,66 @@ def get_possible_actions(states):
 
 
 
+# class Actor(nn.Module):
+#     def __init__(self, state_size, action_size, hidden_size=256, num_heads=4, num_layers=4):
+#         super().__init__()
+
+#         self.embedding = nn.Linear(state_size, hidden_size)  # Embedding linéaire des états
+#         self.norm = nn.LayerNorm(hidden_size)  # Normalisation pour stabiliser l'apprentissage
+
+#         encoder_layers = nn.TransformerEncoderLayer(
+#             d_model=hidden_size, nhead=num_heads, dim_feedforward=hidden_size * 2, 
+#             dropout=0.1, activation='relu'
+#         )
+#         self.transformer_encoder = nn.TransformerEncoder(encoder_layers, num_layers=num_layers)
+
+#         self.fc_out = nn.Linear(hidden_size, action_size)  # Projection vers l'espace des actions
+#         self.to(device)  # Déplacement du modèle sur le GPU
+
+#     def forward(self, x):
+#         x = self.embedding(x)  # Transformation de l'entrée
+#         x = self.norm(x)  # Normalisation
+#         x = x.unsqueeze(0)  # Ajout d'une dimension batch (nécessaire pour Transformer)
+#         x = self.transformer_encoder(x)  # Passage dans l'encodeur Transformer
+#         x = x.squeeze(0)  # Suppression de la dimension batch
+#         return self.fc_out(x)  # Projection finale vers les actions
+
+
+# class Critic(nn.Module):
+#     def __init__(self, state_size, hidden_size=256, num_heads=4, num_layers=4):
+#         super().__init__()
+
+#         self.embedding = nn.Linear(state_size, hidden_size)  # Embedding linéaire des états
+#         self.norm = nn.LayerNorm(hidden_size)  # Normalisation pour stabiliser l'apprentissage
+
+#         encoder_layers = nn.TransformerEncoderLayer(
+#             d_model=hidden_size, nhead=num_heads, dim_feedforward=hidden_size * 2, 
+#             dropout=0.1, activation='relu'
+#         )
+#         self.transformer_encoder = nn.TransformerEncoder(encoder_layers, num_layers=num_layers)
+
+#         self.fc_out = nn.Linear(hidden_size, 1)  # Projection vers la valeur de l'état
+#         self.to(device)  # Déplacement du modèle sur le GPU
+
+#     def forward(self, x):
+#         x = self.embedding(x)  # Transformation de l'entrée
+#         x = self.norm(x)  # Normalisation
+#         x = x.unsqueeze(0)  # Ajout d'une dimension batch
+#         x = self.transformer_encoder(x)  # Passage dans l'encodeur Transformer
+#         x = x.squeeze(0)  # Suppression de la dimension batch
+#         return self.fc_out(x)  # Projection finale vers une valeur unique
+
+
 class Actor(nn.Module):
-    def __init__(self, state_size, action_size, hidden_size=256, num_heads=4, num_layers=4):
+    def __init__(self, state_size, action_size, hidden_size=512, num_heads=8, num_layers=6):
         super().__init__()
 
         self.embedding = nn.Linear(state_size, hidden_size)  # Embedding linéaire des états
         self.norm = nn.LayerNorm(hidden_size)  # Normalisation pour stabiliser l'apprentissage
 
         encoder_layers = nn.TransformerEncoderLayer(
-            d_model=hidden_size, nhead=num_heads, dim_feedforward=hidden_size * 2, 
-            dropout=0.1, activation='relu'
+            d_model=hidden_size, nhead=num_heads, dim_feedforward=hidden_size * 4,
+            dropout=0.2, activation='gelu'
         )
         self.transformer_encoder = nn.TransformerEncoder(encoder_layers, num_layers=num_layers)
 
@@ -104,17 +154,16 @@ class Actor(nn.Module):
         x = x.squeeze(0)  # Suppression de la dimension batch
         return self.fc_out(x)  # Projection finale vers les actions
 
-
 class Critic(nn.Module):
-    def __init__(self, state_size, hidden_size=256, num_heads=4, num_layers=4):
+    def __init__(self, state_size, hidden_size=512, num_heads=8, num_layers=6):
         super().__init__()
 
         self.embedding = nn.Linear(state_size, hidden_size)  # Embedding linéaire des états
         self.norm = nn.LayerNorm(hidden_size)  # Normalisation pour stabiliser l'apprentissage
 
         encoder_layers = nn.TransformerEncoderLayer(
-            d_model=hidden_size, nhead=num_heads, dim_feedforward=hidden_size * 2, 
-            dropout=0.1, activation='relu'
+            d_model=hidden_size, nhead=num_heads, dim_feedforward=hidden_size * 4,
+            dropout=0.2, activation='gelu'
         )
         self.transformer_encoder = nn.TransformerEncoder(encoder_layers, num_layers=num_layers)
 
@@ -128,9 +177,6 @@ class Critic(nn.Module):
         x = self.transformer_encoder(x)  # Passage dans l'encodeur Transformer
         x = x.squeeze(0)  # Suppression de la dimension batch
         return self.fc_out(x)  # Projection finale vers une valeur unique
-
-
-
 
 class MAPPOAgent:
     def __init__(self, state_size, action_size, n_agents, lr=3e-5):

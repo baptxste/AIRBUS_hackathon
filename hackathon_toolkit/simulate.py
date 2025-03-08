@@ -46,55 +46,139 @@ def simulation_config(config_path: str, new_agent: bool = True):
 
     return env, agents, config
 
-def plot_cumulated_rewards(rewards: list, interval: int = 100):
+# def plot_cumulated_rewards(rewards: list, interval: int = 100):
+#     """
+#     Plot and save the rewards over episodes.
+
+#     Args:
+#         rewards (list): List of total rewards per episode.
+#         interval (int): Interval between ticks on the x-axis (default is 100).
+#     """
+#     plt.figure(figsize=(10, 6))
+#     plt.plot(range(1, len(rewards)+1), rewards, color='blue', linestyle='-')
+#     plt.title('Total Cumulated Rewards per Episode')
+#     plt.xlabel('Episodes')
+#     interval = len(rewards)//10
+#     # Adjust x-ticks to display every 'interval' episodes
+#     xticks = range(1, len(rewards)+1, interval)
+#     plt.xticks(xticks)
+    
+#     plt.ylabel('Cumulated Rewards')
+#     plt.grid(True)
+#     plt.savefig('reward_curve_per_episode.png', dpi=300)
+#     plt.show()
+
+def plot_cumulated_rewards(rewards: list, interval: int = 10):
     """
-    Plot and save the rewards over episodes.
+    Plot and save the rewards over episodes with an optional smoothed curve.
 
     Args:
         rewards (list): List of total rewards per episode.
-        interval (int): Interval between ticks on the x-axis (default is 100).
+        interval (int): Interval for the moving average (default is 100).
     """
     plt.figure(figsize=(10, 6))
-    plt.plot(range(1, len(rewards)+1), rewards, color='blue', linestyle='-')
+
+    # Plot the basic reward curve
+    # plt.plot(range(1, len(rewards) + 1), rewards, color='blue', linestyle='-', label='Cumulated Rewards')
+
+    try:
+        # Calculate the moving average
+        if len(rewards) >= interval:
+            moving_avg = np.convolve(rewards, np.ones(interval) / interval, mode='valid')
+            # Plot the moving average curve
+            plt.plot(range(interval, interval + len(moving_avg)), moving_avg, color='blue', linestyle='-', label='Moving Average')
+        else:
+            print("Interval is larger than the number of episodes. Skipping moving average.")
+    except Exception as e:
+        print(f"Error calculating moving average: {e}")
+
     plt.title('Total Cumulated Rewards per Episode')
     plt.xlabel('Episodes')
-    interval = len(rewards)//10
-    # Adjust x-ticks to display every 'interval' episodes
-    xticks = range(1, len(rewards)+1, interval)
-    plt.xticks(xticks)
-    
     plt.ylabel('Cumulated Rewards')
+
+    # Adjust x-ticks to display every 'interval' episodes
+    interval_ticks = max(1, len(rewards) // interval)
+    xticks = range(1, len(rewards) + 1, interval_ticks)
+    plt.xticks(xticks)
+
     plt.grid(True)
+    plt.legend()
     plt.savefig('reward_curve_per_episode.png', dpi=300)
     plt.show()
 
-def plot_evacuated(evacuated:list): 
+def plot_evacuated(evacuated: list, interval: int = 10):
+    """
+    Plot and save the number of drones evacuated over episodes with an optional smoothed curve.
+
+    Args:
+        evacuated (list): List of the number of drones evacuated per episode.
+        interval (int): Interval for the moving average (default is 100).
+    """
     plt.figure(figsize=(10, 6))
-    plt.plot(range(1, len(evacuated)+1), evacuated, color='green', linestyle='-')
-    plt.title('Number of drones evacuated over episodes')
+
+    # Plot the basic evacuated curve
+    # plt.plot(range(1, len(evacuated) + 1), evacuated, color='green', linestyle='-', label='Evacuated Drones')
+
+    try:
+        # Calculate the moving average
+        if len(evacuated) >= interval:
+            moving_avg = np.convolve(evacuated, np.ones(interval) / interval, mode='valid')
+            # Plot the moving average curve
+            plt.plot(range(interval, interval + len(moving_avg)), moving_avg, color='orange', linestyle='--', label='Moving Average')
+        else:
+            print("Interval is larger than the number of episodes. Skipping moving average.")
+    except Exception as e:
+        print(f"Error calculating moving average: {e}")
+
+    plt.title('Number of Drones Evacuated Over Episodes')
     plt.xlabel('Episodes')
-    interval = len(evacuated)//10
+    plt.ylabel('Number of Drones')
+
     # Adjust x-ticks to display every 'interval' episodes
-    xticks = range(1, len(evacuated)+1, interval)
+    interval_ticks = max(1, len(evacuated) // interval)
+    xticks = range(1, len(evacuated) + 1, interval_ticks)
     plt.xticks(xticks)
-    
-    plt.ylabel('Number of drones')
+
     plt.grid(True)
+    plt.legend()
     plt.savefig('evacuated_per_episode.png', dpi=300)
     plt.show()
 
-def plot_deactivated(deactivated:list):
+def plot_deactivated(deactivated: list, interval: int = 10):
+    """
+    Plot and save the number of drones deactivated over episodes with an optional smoothed curve.
+
+    Args:
+        deactivated (list): List of the number of drones deactivated per episode.
+        interval (int): Interval for the moving average (default is 100).
+    """
     plt.figure(figsize=(10, 6))
-    plt.plot(range(1, len(deactivated)+1), deactivated, color='red', linestyle='-')
-    plt.title('Number of drones deactivated over episodes')
+
+    # Plot the basic deactivated curve
+    # plt.plot(range(1, len(deactivated) + 1), deactivated, color='red', linestyle='-', label='Deactivated Drones')
+
+    try:
+        # Calculate the moving average
+        if len(deactivated) >= interval:
+            moving_avg = np.convolve(deactivated, np.ones(interval) / interval, mode='valid')
+            # Plot the moving average curve
+            plt.plot(range(interval, interval + len(moving_avg)), moving_avg, color='purple', linestyle='--', label='Moving Average')
+        else:
+            print("Interval is larger than the number of episodes. Skipping moving average.")
+    except Exception as e:
+        print(f"Error calculating moving average: {e}")
+
+    plt.title('Number of Drones Deactivated Over Episodes')
     plt.xlabel('Episodes')
-    interval = len(deactivated)//10
+    plt.ylabel('Number of Drones')
+
     # Adjust x-ticks to display every 'interval' episodes
-    xticks = range(1, len(deactivated)+1, interval)
+    interval_ticks = max(1, len(deactivated) // interval)
+    xticks = range(1, len(deactivated) + 1, interval_ticks)
     plt.xticks(xticks)
-    
-    plt.ylabel('Number of drones')
+
     plt.grid(True)
+    plt.legend()
     plt.savefig('deactivated_per_episode.png', dpi=300)
     plt.show()
 
@@ -178,9 +262,9 @@ def train(config_path = 'config.json'):
             print(f"Episode {episode}, Reward: {episode_rewards},Evacuated: {len(info['evacuated_agents'])},Deactivated: {len(info['deactivated_agents'])}, Actor Loss: {actor_loss:.2f}, Critic Loss: {critic_loss:.2f}")
     except KeyboardInterrupt:
         print("\nSimulation interrupted by the user") 
-    # plot_cumulated_rewards(rewards_over_episodes)
-    # plot_evacuated(evacuated)
-    # plot_deactivated(deactivated)
+    plot_cumulated_rewards(rewards_over_episodes)
+    plot_evacuated(evacuated)
+    plot_deactivated(deactivated)
     agent.save()
     return agent
 
