@@ -17,7 +17,7 @@ def compute_reward(num_agents, old_positions, agent_positions, evacuated_agents,
         elif i in deactivated_agents:   # Penalties for each deactivated agent
             # only receive this penalty once
             if not np.array_equal(old_pos, new_pos):
-                rewards[i] = -10.0 - 10.0*(max_steps-current_step)/max_steps
+                rewards[i] = -50.0 - 10.0*(max_steps-current_step)/max_steps
             else:
                 rewards[i] = 0.0
         elif tuple(new_pos) in goal_area:   # One-time reward for each agent reaching the goal
@@ -31,6 +31,6 @@ def compute_reward(num_agents, old_positions, agent_positions, evacuated_agents,
             if d_old > d_new : 
                 rewards[i] = 10.0
                 
-            else : rewards[i] = -10.0  
+            else : rewards[i] = -1.0  
 
     return rewards, evacuated_agents
