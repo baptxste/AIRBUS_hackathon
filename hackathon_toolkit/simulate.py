@@ -7,7 +7,8 @@ import time
 from typing import Tuple, Optional, Dict
 import torch
 from env import MazeEnv
-from agent import MAPPOAgent
+from agent import MAPPOAgent, Critic, Actor
+from process_state import StateNormalizer
 
 
 
@@ -42,31 +43,24 @@ def simulation_config(config_path: str, new_agent: bool = True):
     )
 
     # Agent configuration
-    agents = MAPPOAgent(state_size=env.single_agent_state_size,action_size=env.action_space.n,n_agents=env.num_agents) if new_agent else None
+    if new_agent == True:
+        agents = MAPPOAgent(state_size=98,action_size=env.action_space.n,n_agents=env.num_agents)
+        # agents = MAPPOAgent(state_size=env.single_agent_state_size,action_size=env.action_space.n,n_agents=env.num_agents)
+          
+
+    elif new_agent == False : 
+        # actor = torch.load("./models/actor.pth", weights_only=False)
+        # critic = torch.load("./models/critic.pth", weights_only=False)
+        # agents = MAPPOAgent(state_size=env.single_agent_state_size,action_size=env.action_space.n,n_agents=env.num_agents, actor=actor, critic=critic)
+
+        agents = MAPPOAgent(state_size=98,action_size=env.action_space.n,n_agents=env.num_agents)
+        agents.actor.load_state_dict(torch.load('./models/actor_best.pth'))
+        agents.critic.load_state_dict(torch.load('./models/critic_best.pth'))
+
+    else : 
+        agents = None
 
     return env, agents, config
-
-# def plot_cumulated_rewards(rewards: list, interval: int = 100):
-#     """
-#     Plot and save the rewards over episodes.
-
-#     Args:
-#         rewards (list): List of total rewards per episode.
-#         interval (int): Interval between ticks on the x-axis (default is 100).
-#     """
-#     plt.figure(figsize=(10, 6))
-#     plt.plot(range(1, len(rewards)+1), rewards, color='blue', linestyle='-')
-#     plt.title('Total Cumulated Rewards per Episode')
-#     plt.xlabel('Episodes')
-#     interval = len(rewards)//10
-#     # Adjust x-ticks to display every 'interval' episodes
-#     xticks = range(1, len(rewards)+1, interval)
-#     plt.xticks(xticks)
-    
-#     plt.ylabel('Cumulated Rewards')
-#     plt.grid(True)
-#     plt.savefig('reward_curve_per_episode.png', dpi=300)
-#     plt.show()
 
 def plot_cumulated_rewards(rewards: list, interval: int = 10):
     """
@@ -124,7 +118,7 @@ def plot_evacuated(evacuated: list, interval: int = 10):
         if len(evacuated) >= interval:
             moving_avg = np.convolve(evacuated, np.ones(interval) / interval, mode='valid')
             # Plot the moving average curve
-            plt.plot(range(interval, interval + len(moving_avg)), moving_avg, color='orange', linestyle='--', label='Moving Average')
+            plt.plot(range(interval, interval + len(moving_avg)), moving_avg, color='green', linestyle='-', label='Moving Average')
         else:
             print("Interval is larger than the number of episodes. Skipping moving average.")
     except Exception as e:
@@ -162,7 +156,7 @@ def plot_deactivated(deactivated: list, interval: int = 10):
         if len(deactivated) >= interval:
             moving_avg = np.convolve(deactivated, np.ones(interval) / interval, mode='valid')
             # Plot the moving average curve
-            plt.plot(range(interval, interval + len(moving_avg)), moving_avg, color='purple', linestyle='--', label='Moving Average')
+            plt.plot(range(interval, interval + len(moving_avg)), moving_avg, color='red', linestyle='-', label='Moving Average')
         else:
             print("Interval is larger than the number of episodes. Skipping moving average.")
     except Exception as e:
@@ -182,27 +176,73 @@ def plot_deactivated(deactivated: list, interval: int = 10):
     plt.savefig('deactivated_per_episode.png', dpi=300)
     plt.show()
 
-def process_state(state, grid_size) :
-    # print(state)
-    """
-    normalise les positions pour éviter les valeurs trop grandes
-    """ 
-    new = []
-    for e in state : 
-        n_other_agent = (len(e) -12) // 10
-        e[0] = e[0] / grid_size
-        e[1] = e[1] /grid_size
-        e[3] = e[3] / grid_size
-        e[4] = e[4] / grid_size
-        for i in range(n_other_agent): 
-            e[12 + 10*i] = e[12 + 10*i] / grid_size
-            e[12 + 10*i + 1] = e[12 + 10*i +1] / grid_size
-        new.append(e)
-    # print(new)
-    return new
-
 def train(config_path = 'config.json'):
     env, agent, config = simulation_config(config_path,new_agent=True)
+    n_agents = env.num_agents
+    buffer = ReplayBuffer()
+    rewards_over_episodes = []
+    evacuated = []
+    deactivated = []
+    try : 
+        for episode in range(config.get('max_episodes')):
+            states, info = env.reset()  # (n_agents, obs_dim)
+            episode_rewards = 0
+            # states = process_state(states, env.grid_size)
+            buffer.clear()
+
+            for step in range(config.get('max_episode_steps')):
+                with torch.no_grad():
+                    actions, log_probs = agent.select_actions(states)
+                # actions, log_probs = agent.select_actions(states)  # Récupérer toutes les actions
+                actions = actions.tolist()
+                log_probs = log_probs.tolist()
+                next_states, rewards, dones, _ ,info= env.step(actions)  # Exécuter toutes les actions
+
+                rewards = np.where(rewards == 1, rewards +  (config.get('max_episode_steps')-step)/config.get('max_episode_steps'), rewards)  # Si la valeur est a, on multiplie par 10
+                rewards = np.where(rewards == -0.5, rewards -  (config.get('max_episode_steps')-step)/config.get('max_episode_steps'), rewards) 
+
+                # Stocker les expériences pour chaque agent
+                for i in range(n_agents):
+                    buffer.store((states[i], actions[i], log_probs[i], rewards[i], next_states[i], dones))
+
+                states = next_states
+                episode_rewards += sum(rewards)
+
+                if dones: break  # Fin de l'épisode si tous les agents sont terminés
+            
+            # Train the agent after collecting data
+            data = buffer.get_data()
+            states, actions, log_probs_old, rewards, next_states, dones = zip(*data)
+            dones = list(dones)
+            actor_loss, critic_loss = agent.compute_loss(states, actions, log_probs_old, rewards, dones)
+            
+            # Update Actor
+            agent.optim_actor.zero_grad()
+            actor_loss.backward(retain_graph=True)
+            agent.optim_actor.step()
+
+            # Update Critic
+            agent.optim_critic.zero_grad()
+            critic_loss.backward()
+            agent.optim_critic.step()
+
+            rewards_over_episodes.append(episode_rewards)
+            evacuated.append(len(info['evacuated_agents']))
+            deactivated.append(len(info['deactivated_agents']))
+            if all(element == env.num_agents for element in evacuated[-15:]):
+                print("le modèle a convergé")
+                raise KeyboardInterrupt
+            print(f"Episode {episode}, Reward: {episode_rewards:.2f},Evacuated: {len(info['evacuated_agents'])},Deactivated: {len(info['deactivated_agents'])}, Actor Loss: {actor_loss:.2f}, Critic Loss: {critic_loss:.2f}")
+    except KeyboardInterrupt:
+        print("\nSimulation interrupted by the user") 
+    plot_cumulated_rewards(rewards_over_episodes)
+    plot_evacuated(evacuated)
+    plot_deactivated(deactivated)
+    agent.save()
+    return agent
+
+def finetune(config_path = 'config.json'):
+    env, agent, config = simulation_config(config_path,new_agent=False)
     n_agents = env.num_agents
     buffer = ReplayBuffer()
     rewards_over_episodes = []
@@ -223,11 +263,7 @@ def train(config_path = 'config.json'):
                 log_probs = log_probs.tolist()
                 next_states, rewards, dones, _ ,info= env.step(actions)  # Exécuter toutes les actions
                 next_states = process_state(next_states, env.grid_size)
-                # rewards = rewards /400 # 400 est le max de récompense pour un pas de temps 
-                #convert to list
-                # print(dones)
-                # terminal = list(dones)
-                
+
                 # Stocker les expériences pour chaque agent
                 for i in range(n_agents):
                     buffer.store((states[i], actions[i], log_probs[i], rewards[i], next_states[i], dones))
@@ -294,7 +330,7 @@ def evaluate(configs_paths: list, trained_agent: MAPPOAgent, num_episodes: int =
         metrics = []
         total_reward = 0
         episode_count = 0
-        
+        evacuated_total = 0
         # Initial reset of the environment
         states, info = env.reset()
         
@@ -320,6 +356,7 @@ def evaluate(configs_paths: list, trained_agent: MAPPOAgent, num_episodes: int =
 
                 # If the episode is terminated
                 if dones or truncated:
+                    evacuated_total += len(info['evacuated_agents'])
                     print("\r")
                     # Save metrics
                     metrics.append({
@@ -351,13 +388,10 @@ def evaluate(configs_paths: list, trained_agent: MAPPOAgent, num_episodes: int =
 
     all_results.to_csv('all_results.csv', index=False)
 
-    return all_results
-
-
-
+    return all_results, evacuated_total
 
 class ReplayBuffer:
-    def __init__(self, max_size=500):  # ajustéer la taille en fonction des ressources GPU
+    def __init__(self, max_size=10000):  # ajustéer la taille en fonction des ressources GPU
         self.memory = []
         self.max_size = max_size
 
