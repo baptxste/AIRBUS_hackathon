@@ -44,7 +44,7 @@ def simulation_config(config_path: str, new_agent: bool = True):
 
     # Agent configuration
     if new_agent == True:
-        agents = MAPPOAgent(state_size=98,action_size=env.action_space.n,n_agents=env.num_agents)
+        agents = MAPPOAgent(state_size=98,action_size=env.action_space.n,n_agents=env.num_agents, grid_size=env.grid_size)
         # agents = MAPPOAgent(state_size=env.single_agent_state_size,action_size=env.action_space.n,n_agents=env.num_agents)
           
 
@@ -53,7 +53,7 @@ def simulation_config(config_path: str, new_agent: bool = True):
         # critic = torch.load("./models/critic.pth", weights_only=False)
         # agents = MAPPOAgent(state_size=env.single_agent_state_size,action_size=env.action_space.n,n_agents=env.num_agents, actor=actor, critic=critic)
 
-        agents = MAPPOAgent(state_size=98,action_size=env.action_space.n,n_agents=env.num_agents)
+        agents = MAPPOAgent(state_size=98,action_size=env.action_space.n,n_agents=env.num_agents, grid_size=env.grid_size)
         agents.actor.load_state_dict(torch.load('./models/actor_best.pth'))
         agents.critic.load_state_dict(torch.load('./models/critic_best.pth'))
 
@@ -198,8 +198,8 @@ def train(config_path = 'config.json'):
                 log_probs = log_probs.tolist()
                 next_states, rewards, dones, _ ,info= env.step(actions)  # Exécuter toutes les actions
 
-                rewards = np.where(rewards == 1, rewards +  (config.get('max_episode_steps')-step)/config.get('max_episode_steps'), rewards)  # Si la valeur est a, on multiplie par 10
-                rewards = np.where(rewards == -0.5, rewards -  (config.get('max_episode_steps')-step)/config.get('max_episode_steps'), rewards) 
+                rewards = np.where(rewards == 100, rewards +  (config.get('max_episode_steps')-step)/config.get('max_episode_steps'), rewards)  # Si la valeur est a, on multiplie par 10
+                rewards = np.where(rewards == -50, rewards -  (config.get('max_episode_steps')-step)/config.get('max_episode_steps'), rewards) 
 
                 # Stocker les expériences pour chaque agent
                 for i in range(n_agents):
@@ -252,7 +252,6 @@ def finetune(config_path = 'config.json'):
         for episode in range(config.get('max_episodes')):
             states, info = env.reset()  # (n_agents, obs_dim)
             episode_rewards = 0
-            states = process_state(states, env.grid_size)
             buffer.clear()
 
             for step in range(config.get('max_episode_steps')):
@@ -262,7 +261,6 @@ def finetune(config_path = 'config.json'):
                 actions = actions.tolist()
                 log_probs = log_probs.tolist()
                 next_states, rewards, dones, _ ,info= env.step(actions)  # Exécuter toutes les actions
-                next_states = process_state(next_states, env.grid_size)
 
                 # Stocker les expériences pour chaque agent
                 for i in range(n_agents):
@@ -383,10 +381,8 @@ def evaluate(configs_paths: list, trained_agent: MAPPOAgent, num_episodes: int =
         # Convert the current configuration's metrics to a DataFrame
         config_results = pd.DataFrame(metrics)
         all_results = pd.concat([all_results, config_results], ignore_index=True)
-    
-    env.close()
-
     all_results.to_csv('all_results.csv', index=False)
+    env.close()
 
     return all_results, evacuated_total
 

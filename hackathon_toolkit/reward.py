@@ -13,11 +13,11 @@ def compute_reward(num_agents, old_positions, agent_positions, evacuated_agents,
         elif i in deactivated_agents:   # Penalties for each deactivated agent
             # only receive this penalty once
             if not np.array_equal(old_pos, new_pos):
-                rewards[i] = 0.5 
+                rewards[i] = 50 
             else:
                 rewards[i] = 0.0
         elif tuple(new_pos) in goal_area:   # One-time reward for each agent reaching the goal
-            rewards[i] = 1 
+            rewards[i] = 100 
             evacuated_agents.add(i)
         else:
             # if the agent came closer of the goal their is a small  postive reward 
@@ -25,8 +25,8 @@ def compute_reward(num_agents, old_positions, agent_positions, evacuated_agents,
             d_old = manhattan_distance(old_positions[i], goal_area[i])
             d_new= manhattan_distance(agent_positions[i], goal_area[i])
             if d_old > d_new : 
-                rewards[i] = 0.1
+                rewards[i] = 10
                 
-            else : rewards[i] = -0.2  
+            else : rewards[i] = -20
 
     return rewards, evacuated_agents
